@@ -7,7 +7,11 @@
 //
 
 #import <UIKit/UIKit.h>
-
+#import "cacheImageView.h"
 @interface LoadCollectionViewCell : UICollectionViewCell
-
+{
+    
+}
+@property(nonatomic,weak)IBOutlet UIActivityIndicatorView *activityObj;
+@property(nonatomic,weak)IBOutlet cacheImageView *imageView;
 @end

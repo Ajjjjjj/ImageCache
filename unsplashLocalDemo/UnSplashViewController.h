@@ -8,8 +8,11 @@
 
 #import <UIKit/UIKit.h>
 
-@interface ViewController : UIViewController
-
+@interface UnSplashViewController : UIViewController
+{
+    
+}
+-(void)webCallMethod;
 
 @end
 

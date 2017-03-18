@@ -9,5 +9,8 @@
 #import <UIKit/UIKit.h>
 
 @interface ShareViewController : UIViewController
-
+{
+    
+}
+@property(nonatomic)UIImage* selectedImage;
 @end

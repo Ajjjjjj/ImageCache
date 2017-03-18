@@ -7,6 +7,7 @@
 //
 
 #import "FirstViewController.h"
+#import "UnSplashViewController.h"
 
 @interface FirstViewController ()
 
@@ -16,9 +17,20 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    [self.view setBackgroundColor:[UIColor grayColor]];
     // Do any additional setup after loading the view.
 }
 
+-(IBAction)openUnsplash:(id)sender{
+    UnSplashViewController *unSplashObj = (UnSplashViewController *)[self.storyboard instantiateViewControllerWithIdentifier:@"UnSplashViewController"];
+    //menu is only an example
+    unSplashObj.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
+    [self presentViewController:unSplashObj animated:YES completion:nil];}
+
+
+-(BOOL)prefersStatusBarHidden{
+    return YES;
+}
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.

@@ -6,21 +6,21 @@
 //  Copyright © 2017 iMorale. All rights reserved.
 //
 
-#import "ViewController.h"
+#import "UnSplashViewController.h"
 #import "WebHandlerClass.h"
-
 #import "LoadCollectionViewCell.h"
+#import "ShareViewController.h"
 
 #define unSplashBaseUrl @"https://unsplash.it/"
 #define thumbSize 100
-@interface ViewController ()<WebHandlerDelegate , UICollectionViewDataSource,UICollectionViewDelegate>
+@interface UnSplashViewController ()<WebHandlerDelegate , UICollectionViewDataSource,UICollectionViewDelegate>
 {
     NSMutableArray *unsplashRecords;
 }
 @property(nonatomic,weak)IBOutlet UICollectionView *unsplashCollectionView;
 @end
 
-@implementation ViewController
+@implementation UnSplashViewController
 
 #pragma View Controller Delegates
 - (void)viewDidLoad {
@@ -31,6 +31,12 @@
      [_unsplashCollectionView registerNib:[UINib nibWithNibName:@"LoadCollectionViewCell" bundle:nil] forCellWithReuseIdentifier:@"Cell"];
     _unsplashCollectionView.dataSource =self;
     _unsplashCollectionView.delegate =self;
+    
+    [self.view setUserInteractionEnabled:NO];
+    [SVProgressHUD show];
+    [self performSelector:@selector(webCallMethod) withObject:nil afterDelay:0.5];
+    
+    
     // Do any additional setup after loading the view, typically from a nib.
 }
 
@@ -38,7 +44,6 @@
     
     [super viewDidAppear:animated];
     
-    [self performSelector:@selector(webCallMethod) withObject:nil afterDelay:0.3];
 }
 
 #pragma web Call and delegates
@@ -54,12 +59,17 @@
 
 
 -(void)responseSuccessWithObject : (id)responseObject webservice:(WebHandlerClass*)handler{
-    
+    [self.view setUserInteractionEnabled:YES];
+    __weak typeof(self) weakSelf= self;
+    [SVProgressHUD dismiss];
     if ([responseObject isKindOfClass:[NSArray class]]) {
        unsplashRecords = ((NSArray*)responseObject).mutableCopy;
         
         if (unsplashRecords.count>0) {
-            [_unsplashCollectionView reloadData];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [weakSelf.unsplashCollectionView reloadData];
+
+            });
         }
     }
     
@@ -67,6 +77,28 @@
 }
 -(void)failedWithError : (NSError*)error webservice:(WebHandlerClass*)handler{
     
+    [self.view setUserInteractionEnabled:YES];
+    [SVProgressHUD dismiss];
+    
+    
+    
+    UIAlertController *alertController;
+    UIAlertAction *destroyAction;
+    
+    alertController = [UIAlertController alertControllerWithTitle:@"Alert!"
+                                                          message:error.localizedDescription
+                                                   preferredStyle:UIAlertControllerStyleAlert];
+    destroyAction = [UIAlertAction actionWithTitle:@"Cancel"
+                                             style:UIAlertActionStyleDestructive
+                                           handler:^(UIAlertAction *action) {
+                                               // do destructive stuff here
+                                           }];
+      // note: you can control the order buttons are shown, unlike UIActionSheet
+    [alertController addAction:destroyAction];
+    [alertController setModalPresentationStyle:UIModalPresentationPopover];
+    
+    [self presentViewController:alertController animated:YES completion:nil];
+
     
 }
 
@@ -95,21 +127,64 @@
     {
         [cell setBackgroundColor:[UIColor cyanColor]];
     }
+    cell.activityObj.hidden= NO;;
+
     [cell.activityObj startAnimating];
     
     NSString *imageID = [NSString stringWithFormat:@"%@",[[unsplashRecords objectAtIndex:indexPath.item] objectForKey:@"id"]];
     
-    //int ImageId = [[unsplashRecords objectAtIndex:indexPath.item] objectForKey:@"id"];
-    
     NSString *urlName = [NSString stringWithFormat:@"%@%d/%d?image=%@",unSplashBaseUrl,thumbSize,thumbSize,imageID];
     NSString *imageName = [[unsplashRecords objectAtIndex:indexPath.item] objectForKey:@"filename"];
-    NSLog(@"%@=====%@=== %ld",urlName,imageName,(long)indexPath.item);
+    cell.imageView.contentMode = UIViewContentModeScaleAspectFit;
 
-    [cell.imageView setImageWithUrl:[NSURL URLWithString:urlName] :(NSString*)imageName];
+    [cell.imageView setImageWithUrl:[NSURL URLWithString:urlName] :(NSString*)imageName  completion:^(){
+        [cell.activityObj stopAnimating];
+        [cell.activityObj setHidesWhenStopped:YES];
+    }];
     
     return cell;
     
 }
+
+-(void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath
+{
+    NSString *imageID = [NSString stringWithFormat:@"%@",[[unsplashRecords objectAtIndex:indexPath.item] objectForKey:@"id"]];
+    
+    NSString *imageWidth = [NSString stringWithFormat:@"%@",[[unsplashRecords objectAtIndex:indexPath.item] objectForKey:@"width"]];
+
+    NSString *imageHeight = [NSString stringWithFormat:@"%@",[[unsplashRecords objectAtIndex:indexPath.item] objectForKey:@"height"]];
+    
+    
+    NSString *urlName = [NSString stringWithFormat:@"%@%@/%@?image=%@",unSplashBaseUrl,imageWidth,imageHeight,imageID];
+
+    [SVProgressHUD show];
+    [self.view setUserInteractionEnabled:NO];
+  
+    [self performSelector:@selector(downloadImage:) withObject:urlName afterDelay:0.4];
+
+}
+
+-(void)downloadImage:(NSString*)urlString{
+    __weak typeof(self) weakSelf= self;
+    [[WebHandlerClass sharedInstance] downloadImage:(NSURL *)[NSURL URLWithString:urlString] completion:^(UIImage* processedImage){
+        
+        [SVProgressHUD dismiss];
+        [self.view setUserInteractionEnabled:YES];
+        if (processedImage.size.width>0) {
+            
+        dispatch_async(dispatch_get_main_queue(), ^{
+            ShareViewController *shareObj = (ShareViewController *)[self.storyboard instantiateViewControllerWithIdentifier:@"ShareViewController"];
+            //menu is only an example
+            shareObj.selectedImage=processedImage;
+            shareObj.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
+            [weakSelf presentViewController:shareObj animated:YES completion:nil];
+            
+        });
+        }
+    }];
+
+}
+
 
 - (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout*)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath{
     
@@ -164,8 +239,10 @@
         }
     }
     
+}
+-(IBAction)moveBack:(id)sender{
     
-    
+    [self dismissViewControllerAnimated:YES completion:nil];
 }
 
 

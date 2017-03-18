@@ -1,25 +1,18 @@
-//
-//  FTWCache.m
-//  FTW
-//
-//  Created by Soroush Khanlou on 6/28/12.
-//  Copyright (c) 2012 FTW. All rights reserved.
-//
 
-#import "FTWCache.h"
+#import "AjayCache.h"
 
 static NSTimeInterval cacheTime =  (double)604800;
 
-@implementation FTWCache
+@implementation AjayCache
 
 + (void) resetCache {
-	[[NSFileManager defaultManager] removeItemAtPath:[FTWCache cacheDirectory] error:nil];
+	[[NSFileManager defaultManager] removeItemAtPath:[AjayCache cacheDirectory] error:nil];
 }
 
 + (NSString*) cacheDirectory {
 	NSArray* paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
 	NSString *cacheDirectory = [paths objectAtIndex:0];
-	cacheDirectory = [cacheDirectory stringByAppendingPathComponent:@"FTWCaches"];
+	cacheDirectory = [cacheDirectory stringByAppendingPathComponent:@"AjayCache"];
 	return cacheDirectory;
 }
 

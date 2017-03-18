@@ -9,7 +9,10 @@
 #import "ShareViewController.h"
 
 @interface ShareViewController ()
-
+{
+    
+}
+@property(nonatomic)IBOutlet UIImageView *imageView;
 @end
 
 @implementation ShareViewController
@@ -18,6 +21,38 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view.
 }
+
+-(void)viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:animated];
+    
+    self.imageView.image = self.selectedImage;
+    self.imageView.contentMode = UIViewContentModeScaleAspectFit;
+}
+
+-(IBAction)moveBack:(id)sender{
+    
+    [self dismissViewControllerAnimated:YES completion:nil];
+}
+
+
+-(IBAction)shareImage:(id)sender{
+    
+    if (self.selectedImage) {
+        NSMutableArray *activityItems= [NSMutableArray arrayWithObjects:_imageView.image, nil];
+        UIActivityViewController *activityViewController = [[UIActivityViewController alloc] initWithActivityItems:activityItems applicationActivities:nil];
+     
+        [self presentViewController:activityViewController animated:YES completion:nil];
+    }
+    
+    
+  
+
+}
+
+-(BOOL)prefersStatusBarHidden{
+    return YES;
+}
+
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];

@@ -9,5 +9,8 @@
 #import <UIKit/UIKit.h>
 
 @interface cacheImageView : UIImageView
-
+{
+    
+}
+-(void) setImageWithUrl:(NSURL*)UrlString :(NSString*)fileName completion:(void (^)())completion;
 @end

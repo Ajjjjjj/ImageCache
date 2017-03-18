@@ -10,6 +10,7 @@
 #endif
 
 #import "SVProgressHUD.h"
+#import "SVIndefiniteAnimatedView.h"
 #import "SVProgressAnimatedView.h"
 #import "SVRadialGradientLayer.h"
 
@@ -1062,6 +1063,46 @@ static const CGFloat SVProgressHUDLabelSpacing = 8.0f;
     }];
 }
 
+
+#pragma mark - Ring progress animation
+
+- (UIView*)indefiniteAnimatedView {
+    // Get the correct spinner for defaultAnimationType
+    if(self.defaultAnimationType == SVProgressHUDAnimationTypeFlat){
+        // Check if spinner exists and is an object of different class
+        if(_indefiniteAnimatedView && ![_indefiniteAnimatedView isKindOfClass:[SVIndefiniteAnimatedView class]]){
+            [_indefiniteAnimatedView removeFromSuperview];
+            _indefiniteAnimatedView = nil;
+        }
+        
+        if(!_indefiniteAnimatedView){
+            _indefiniteAnimatedView = [[SVIndefiniteAnimatedView alloc] initWithFrame:CGRectZero];
+        }
+        
+        // Update styling
+        SVIndefiniteAnimatedView *indefiniteAnimatedView = (SVIndefiniteAnimatedView*)_indefiniteAnimatedView;
+        indefiniteAnimatedView.strokeColor = self.foregroundColorForStyle;
+        indefiniteAnimatedView.strokeThickness = self.ringThickness;
+        indefiniteAnimatedView.radius = self.statusLabel.text ? self.ringRadius : self.ringNoTextRadius;
+    } else {
+        // Check if spinner exists and is an object of different class
+        if(_indefiniteAnimatedView && ![_indefiniteAnimatedView isKindOfClass:[UIActivityIndicatorView class]]){
+            [_indefiniteAnimatedView removeFromSuperview];
+            _indefiniteAnimatedView = nil;
+        }
+        
+        if(!_indefiniteAnimatedView){
+            _indefiniteAnimatedView = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+        }
+        
+        // Update styling
+        UIActivityIndicatorView *activityIndicatorView = (UIActivityIndicatorView*)_indefiniteAnimatedView;
+        activityIndicatorView.color = self.foregroundColorForStyle;
+    }
+    [_indefiniteAnimatedView sizeToFit];
+    
+    return _indefiniteAnimatedView;
+}
 
 - (SVProgressAnimatedView*)ringView {
     if(!_ringView) {
